@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#10151a">
+  <title>Reproductor musical local</title>
+  <link rel="stylesheet" href="/css/styles.css">
+  <script src="/js/api.js" defer></script>
+  <script src="/js/player.js" defer></script>
+  <script src="/js/playlists.js" defer></script>
+  <script src="/js/tags.js" defer></script>
+  <script src="/js/library.js" defer></script>
+  <script src="/js/app.js" defer></script>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar" aria-label="Navegación de la biblioteca">
+      <div class="sidebar-top">
+        <a class="brand" href="/" aria-label="Reproductor musical local, inicio">
+          <span class="brand-mark" aria-hidden="true">♫</span>
+          <span><strong>Mi música</strong><small>Biblioteca local</small></span>
+        </a>
+        <button id="sidebar-close" class="icon-button drawer-close" type="button" aria-label="Cerrar navegación">×</button>
+      </div>
+
+      <nav class="library-navigation" aria-label="Biblioteca">
+        <button id="all-songs" class="nav-item is-selected" type="button" aria-current="page">
+          <span class="nav-icon" aria-hidden="true">▤</span><span>Todas las canciones</span>
+        </button>
+
+        <section class="sidebar-section" aria-labelledby="playlists-title">
+          <div class="sidebar-heading">
+            <h2 id="playlists-title">Listas</h2>
+            <button class="compact-action" type="button" data-create-target="playlist-name" aria-controls="playlist-form" aria-expanded="false" aria-label="Crear lista" title="Crear lista">+</button>
+          </div>
+          <form id="playlist-form" class="create-form sidebar-create-form">
+            <input id="playlist-name" maxlength="60" placeholder="Nombre de la lista" aria-label="Nombre de la lista" required>
+            <button type="submit" aria-label="Guardar lista">+</button>
+          </form>
+          <ul id="playlist-list" class="management-list"></ul>
+        </section>
+
+        <section class="sidebar-section" aria-labelledby="tags-title">
+          <div class="sidebar-heading">
+            <h2 id="tags-title">Tags</h2>
+            <button class="compact-action" type="button" data-create-target="tag-name" aria-controls="tag-form" aria-expanded="false" aria-label="Crear tag" title="Crear tag">+</button>
+          </div>
+          <form id="tag-form" class="create-form sidebar-create-form">
+            <input id="tag-name" maxlength="60" placeholder="Nombre del tag" aria-label="Nombre del tag" required>
+            <button type="submit" aria-label="Guardar tag">+</button>
+          </form>
+          <ul id="tag-list" class="tag-list"></ul>
+        </section>
+      </nav>
+    </aside>
+
+    <main class="workspace">
+      <header class="topbar">
+        <button id="sidebar-toggle" class="icon-button sidebar-toggle" type="button" aria-controls="sidebar" aria-expanded="false" aria-label="Abrir navegación">☰</button>
+        <label class="search-box">
+          <span class="search-icon" aria-hidden="true">⌕</span>
+          <input id="search-input" type="search" placeholder="Buscar canciones, artistas o tags" aria-label="Buscar globalmente por título, artista o tag" autocomplete="off">
+          <button id="clear-search" type="button" aria-label="Borrar búsqueda" hidden>×</button>
+        </label>
+        <button class="button scan-button" id="scan-button" type="button"><span aria-hidden="true">↻</span> Escanear</button>
+      </header>
+
+      <section class="library-panel" aria-labelledby="library-title">
+        <div class="library-heading">
+          <div>
+            <p class="eyebrow">TU COLECCIÓN</p>
+            <h1 id="library-title">Todas las canciones</h1>
+          </div>
+          <p id="library-status" class="status" role="status" aria-live="polite">Cargando biblioteca…</p>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Título</th><th>Artista</th><th>Formato</th><th><span class="sr-only">Acciones</span></th></tr></thead>
+            <tbody id="song-list"></tbody>
+          </table>
+        </div>
+        <p id="empty-state" class="empty library-empty" hidden></p>
+      </section>
+    </main>
+  </div>
+
+  <aside class="queue-panel" id="queue-panel" aria-labelledby="queue-title" hidden>
+    <div class="queue-heading"><div><p class="eyebrow">SIGUIENTE</p><h2 id="queue-title">Cola de reproducción</h2></div><button id="close-queue" class="text-button" type="button" aria-label="Cerrar cola">×</button></div>
+    <ol id="queue-list" class="queue-list"><li class="empty">La cola está vacía.</li></ol>
+  </aside>
+
+  <section class="player" aria-label="Controles de reproducción">
+    <audio id="audio" preload="metadata"></audio>
+    <div class="now-playing"><span class="mini-record" aria-hidden="true"></span><div><strong id="now-title">Nada en reproducción</strong><span id="now-artist">Elige una canción de la biblioteca</span></div></div>
+    <div class="transport">
+      <div class="buttons">
+        <button class="icon-button" id="previous" aria-label="Canción anterior" type="button">◀|</button>
+        <button class="icon-button play-button" id="play-pause" aria-label="Reproducir" aria-pressed="false" type="button">▶</button>
+        <button class="icon-button" id="next" aria-label="Canción siguiente" type="button">|▶</button>
+      </div>
+      <div class="timeline"><span id="current-time">0:00</span><input id="progress" type="range" min="0" max="1000" value="0" aria-label="Progreso de la canción"><span id="duration">0:00</span></div>
+    </div>
+    <div class="player-tools">
+      <label class="volume"><span aria-hidden="true">♪</span><input id="volume" type="range" min="0" max="1" step="0.01" value="0.8" aria-label="Volumen"></label>
+      <button id="queue-toggle" class="queue-toggle" type="button" aria-controls="queue-panel" aria-expanded="false"><span aria-hidden="true">☷</span> Cola</button>
+    </div>
+    <p id="player-status" class="sr-only" role="status" aria-live="polite"></p>
+  </section>
+
+  <div id="song-menu" class="song-menu" role="dialog" aria-label="Organizar canción" hidden>
+    <div class="menu-heading"><strong id="menu-song-title">Organizar canción</strong><button id="close-song-menu" class="text-button" type="button" aria-label="Cerrar">×</button></div>
+    <section><p class="eyebrow">LISTAS</p><div id="menu-playlists" class="menu-options"></div></section>
+    <section><p class="eyebrow">TAGS</p><div id="menu-tags" class="menu-options"></div><form id="menu-tag-form" class="create-form"><input id="menu-tag-name" maxlength="60" placeholder="Crear y asignar tag" aria-label="Crear y asignar tag" required><button type="submit" aria-label="Crear y asignar tag">+</button></form></section>
+    <p id="menu-error" class="form-error" role="status"></p>
+  </div>
+</body>
+</html>
