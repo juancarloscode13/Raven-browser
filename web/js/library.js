@@ -200,13 +200,23 @@ class MusicLibrary {
     body.replaceChildren();
     songs.forEach((song, index) => {
       const row = document.createElement('tr');
+      row.className = `song-row${song.available ? ' is-playable' : ''}`;
+      if (song.available) {
+        row.tabIndex = 0;
+        row.setAttribute('aria-label', `Reproducir ${song.title} de ${song.artist}`);
+        row.setAttribute('aria-keyshortcuts', 'Enter Space');
+      }
       const title = document.createElement('td'); title.textContent = song.title;
+      if (!song.available) {
+        const availability = document.createElement('span');
+        availability.className = 'availability-status';
+        availability.textContent = 'No disponible';
+        title.append(availability);
+      }
       const artist = document.createElement('td'); artist.textContent = song.artist;
       const format = document.createElement('td'); format.textContent = (song.format || '').toUpperCase(); format.className = 'format';
       const action = document.createElement('td');
-      const button = document.createElement('button'); button.type = 'button'; button.className = 'row-play';
-      button.textContent = song.available ? 'Reproducir' : 'No disponible'; button.disabled = !song.available;
-      button.addEventListener('click', () => this.player.setQueue(songs, song.id));
+      const controls = document.createElement('div'); controls.className = 'row-actions';
       const organize = document.createElement('button'); organize.type = 'button'; organize.className = 'small-action';
       organize.textContent = '···'; organize.setAttribute('aria-label', `Gestionar tags y listas de ${song.title}`);
       organize.addEventListener('click', event => this.onContext(song, { clientX: event.clientX, clientY: event.clientY }));
@@ -223,10 +233,21 @@ class MusicLibrary {
           });
           return control;
         };
-        action.append(move('↑', -1), move('↓', 1));
+        controls.append(move('↑', -1), move('↓', 1));
       }
+      controls.append(organize);
+      action.append(controls);
+      row.addEventListener('click', event => {
+        if (!song.available || (event.target instanceof Element && event.target.closest('button, a, input, select, textarea, [contenteditable="true"]'))) return;
+        this.player.setQueue(songs, song.id);
+      });
+      row.addEventListener('keydown', event => {
+        if (!song.available || event.target !== row || event.repeat || (event.key !== 'Enter' && event.key !== ' ')) return;
+        if (event.key === ' ') event.preventDefault();
+        this.player.setQueue(songs, song.id);
+      });
       row.addEventListener('contextmenu', event => { event.preventDefault(); this.onContext(song, event); });
-      action.append(button, organize); row.append(title, artist, format, action); body.append(row);
+      row.append(title, artist, format, action); body.append(row);
     });
     this.elements.empty.hidden = songs.length !== 0;
     this.elements.table.hidden = songs.length === 0;
