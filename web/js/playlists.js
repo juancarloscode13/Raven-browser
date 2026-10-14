@@ -11,8 +11,10 @@ class PlaylistManager {
     try {
       this.items = await this.api.playlists();
       this.loaded = true;
+      this.list.classList.remove('is-error');
       this.render();
     } catch (error) {
+      this.list.classList.add('is-error');
       this.list.textContent = `No se pudieron cargar las listas: ${error.message}`;
     }
   }
@@ -42,18 +44,25 @@ class PlaylistManager {
           await this.api.renamePlaylist(playlist.id, name);
           this.library.renameNavigation(playlist.id, name.trim());
           await this.load();
-        } catch (error) { this.library.elements.status.textContent = `No se pudo renombrar la lista: ${error.message}`; }
+        } catch (error) {
+          this.library.elements.status.classList.add('is-error');
+          this.library.elements.status.textContent = `No se pudo renombrar la lista: ${error.message}`;
+        }
       });
 
       const remove = document.createElement('button'); remove.type = 'button'; remove.className = 'small-action delete-action';
-      remove.textContent = '×'; remove.setAttribute('aria-label', `Eliminar ${playlist.name}`);
+      remove.innerHTML = '<svg viewBox="0 0 24 24" class="icon" aria-hidden="true" focusable="false"><path d="m6 6 12 12M18 6 6 18" /></svg>';
+      remove.setAttribute('aria-label', `Eliminar ${playlist.name}`);
       remove.addEventListener('click', async () => {
         if (!window.confirm(`¿Eliminar la lista «${playlist.name}»? Las canciones y sus tags se conservarán.`)) return;
         try {
           await this.api.deletePlaylist(playlist.id);
           await this.library.removeNavigation(playlist.id, 'playlist');
           await this.load();
-        } catch (error) { this.library.elements.status.textContent = `No se pudo eliminar la lista: ${error.message}`; }
+        } catch (error) {
+          this.library.elements.status.classList.add('is-error');
+          this.library.elements.status.textContent = `No se pudo eliminar la lista: ${error.message}`;
+        }
       });
       item.append(view, rename, remove);
       this.list.append(item);

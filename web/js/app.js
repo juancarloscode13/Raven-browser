@@ -45,7 +45,10 @@ byID('playlist-form').addEventListener('submit', async event => {
     input.value = '';
     event.currentTarget.classList.remove('is-open');
     document.querySelector('[data-create-target="playlist-name"]').setAttribute('aria-expanded', 'false');
-  } catch (error) { byID('library-status').textContent = `No se pudo crear la lista: ${error.message}`; }
+  } catch (error) {
+    byID('library-status').classList.add('is-error');
+    byID('library-status').textContent = `No se pudo crear la lista: ${error.message}`;
+  }
 });
 byID('tag-form').addEventListener('submit', async event => {
   event.preventDefault();
@@ -55,7 +58,10 @@ byID('tag-form').addEventListener('submit', async event => {
     input.value = '';
     event.currentTarget.classList.remove('is-open');
     document.querySelector('[data-create-target="tag-name"]').setAttribute('aria-expanded', 'false');
-  } catch (error) { byID('library-status').textContent = `No se pudo crear el tag: ${error.message}`; }
+  } catch (error) {
+    byID('library-status').classList.add('is-error');
+    byID('library-status').textContent = `No se pudo crear el tag: ${error.message}`;
+  }
 });
 document.querySelectorAll('[data-create-target]').forEach(button => button.addEventListener('click', () => {
   const form = byID(button.dataset.createTarget).closest('form');
@@ -87,12 +93,14 @@ byID('search-input').addEventListener('keydown', event => {
 byID('scan-button').addEventListener('click', async event => {
   const button = event.currentTarget;
   button.disabled = true;
+  byID('library-status').classList.remove('is-error');
   byID('library-status').textContent = 'Escaneando…';
   try {
     const result = await window.musicAPI.scan();
     await library.load();
     if (!library.query && !library.libraryError) byID('library-status').textContent = `Escaneo terminado: ${result.songs} canciones`;
   } catch (error) {
+    byID('library-status').classList.add('is-error');
     byID('library-status').textContent = `Error al escanear: ${error.message}`;
   } finally { button.disabled = false; }
 });

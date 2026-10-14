@@ -19,12 +19,10 @@ class MusicPlayer {
     this.audio.addEventListener('timeupdate', () => this.updateTime());
     this.audio.addEventListener('loadedmetadata', () => this.updateTime());
     this.audio.addEventListener('play', () => {
-      elements.playPause.textContent = 'Ⅱ';
       elements.playPause.setAttribute('aria-label', 'Pausar');
       elements.playPause.setAttribute('aria-pressed', 'true');
     });
     this.audio.addEventListener('pause', () => {
-      elements.playPause.textContent = '▶';
       elements.playPause.setAttribute('aria-label', 'Reproducir');
       elements.playPause.setAttribute('aria-pressed', 'false');
     });
@@ -50,6 +48,7 @@ class MusicPlayer {
     this.elements.currentTime.textContent = '0:00';
     this.elements.duration.textContent = '0:00';
     this.renderQueue();
+    window.dispatchEvent(new CustomEvent('raven:trackchange', { detail: { songID: song.id } }));
     this.message(`Reproduciendo ${song.title} — ${song.artist}`);
     try { await this.audio.play(); }
     catch { this.message('El navegador no pudo iniciar la reproducción. Comprueba el formato del archivo.'); }

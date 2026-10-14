@@ -14,11 +14,13 @@ class MusicLibrary {
     this.songsRequest = 0;
     this.loadError = '';
     this.libraryError = '';
+    window.addEventListener('raven:trackchange', event => this.markCurrentSong(event.detail.songID));
   }
 
   async load() {
     const navigationRequest = ++this.navigationRequest;
     const request = ++this.songsRequest;
+    this.elements.status.classList.remove('is-error');
     this.elements.status.textContent = 'Cargando biblioteca…';
     this.loadError = '';
     this.libraryError = '';
@@ -101,6 +103,7 @@ class MusicLibrary {
     this.onReorder = null;
     this.loadError = '';
     if (options.notify !== false) this.navigationChanged();
+    this.elements.status.classList.remove('is-error');
     this.elements.status.textContent = `Cargando lista «${playlist.name}»…`;
     try {
       const songs = await this.api.playlistSongs(playlist.id);
@@ -166,7 +169,9 @@ class MusicLibrary {
     if (this.elements.title) {
       this.elements.title.textContent = this.query ? 'Resultados de búsqueda' : this.navigation.name;
     }
-    if (this.libraryError || (this.loadError && !this.query)) {
+    const hasDisplayError = Boolean(this.libraryError || (this.loadError && !this.query));
+    this.elements.status.classList.toggle('is-error', hasDisplayError);
+    if (hasDisplayError) {
       this.elements.status.textContent = this.libraryError || this.loadError;
       this.elements.empty.textContent = 'No se pudo mostrar este contenido. Comprueba la conexión con el servidor e inténtalo de nuevo.';
       this.render([]);
@@ -195,12 +200,27 @@ class MusicLibrary {
     return 'Aún no hay canciones. Añade archivos a la carpeta musical y escanea la biblioteca.';
   }
 
+  markCurrentSong(songID) {
+    this.elements.list.querySelectorAll('[data-song-id]').forEach(row => {
+      const isCurrent = row.dataset.songId === String(songID);
+      row.classList.toggle('is-current', isCurrent);
+      if (isCurrent) row.setAttribute('aria-current', 'true');
+      else row.removeAttribute('aria-current');
+    });
+  }
+
   render(songs, onReorder = null) {
     const body = this.elements.list;
+    const currentSong = this.player.queue?.[this.player.index];
     body.replaceChildren();
     songs.forEach((song, index) => {
       const row = document.createElement('tr');
       row.className = `song-row${song.available ? ' is-playable' : ''}`;
+      row.dataset.songId = String(song.id);
+      if (currentSong && String(currentSong.id) === String(song.id)) {
+        row.classList.add('is-current');
+        row.setAttribute('aria-current', 'true');
+      }
       if (song.available) {
         row.tabIndex = 0;
         row.setAttribute('aria-label', `Reproducir ${song.title} de ${song.artist}`);
@@ -218,22 +238,29 @@ class MusicLibrary {
       const action = document.createElement('td');
       const controls = document.createElement('div'); controls.className = 'row-actions';
       const organize = document.createElement('button'); organize.type = 'button'; organize.className = 'small-action';
-      organize.textContent = '···'; organize.setAttribute('aria-label', `Gestionar tags y listas de ${song.title}`);
+      organize.innerHTML = '<svg viewBox="0 0 24 24" class="icon" aria-hidden="true" focusable="false"><circle cx="5" cy="12" r="1" /><circle cx="12" cy="12" r="1" /><circle cx="19" cy="12" r="1" /></svg>';
+      organize.setAttribute('aria-label', `Gestionar tags y listas de ${song.title}`);
       organize.addEventListener('click', event => this.onContext(song, { clientX: event.clientX, clientY: event.clientY }));
       if (onReorder) {
-        const move = (label, delta) => {
+        const move = (isUp, delta) => {
           const control = document.createElement('button'); control.type = 'button'; control.className = 'small-action order-action';
-          control.textContent = label; control.setAttribute('aria-label', `${label === '↑' ? 'Subir' : 'Bajar'} ${song.title}`);
+          control.innerHTML = isUp
+            ? '<svg viewBox="0 0 24 24" class="icon" aria-hidden="true" focusable="false"><path d="m6 14 6-6 6 6" /></svg>'
+            : '<svg viewBox="0 0 24 24" class="icon" aria-hidden="true" focusable="false"><path d="m6 10 6 6 6-6" /></svg>';
+          control.setAttribute('aria-label', `${isUp ? 'Subir' : 'Bajar'} ${song.title}`);
           control.disabled = !songs[index + delta];
           control.addEventListener('click', async () => {
             const ordered = [...songs];
             [ordered[index], ordered[index + delta]] = [ordered[index + delta], ordered[index]];
             try { await onReorder(ordered); }
-            catch (error) { this.elements.status.textContent = `No se pudo cambiar el orden: ${error.message}`; }
+            catch (error) {
+              this.elements.status.classList.add('is-error');
+              this.elements.status.textContent = `No se pudo cambiar el orden: ${error.message}`;
+            }
           });
           return control;
         };
-        controls.append(move('↑', -1), move('↓', 1));
+        controls.append(move(true, -1), move(false, 1));
       }
       controls.append(organize);
       action.append(controls);

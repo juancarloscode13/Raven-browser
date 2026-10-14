@@ -11,8 +11,10 @@ class TagManager {
     try {
       this.items = await this.api.tags();
       this.loaded = true;
+      this.list.classList.remove('is-error');
       this.render();
     } catch (error) {
+      this.list.classList.add('is-error');
       this.list.textContent = `No se pudieron cargar los tags: ${error.message}`;
     }
   }
@@ -34,7 +36,8 @@ class TagManager {
       if (this.library.navigation.type === 'tag' && this.library.navigation.id === tag.id) select.setAttribute('aria-current', 'page');
       select.addEventListener('click', () => this.library.selectTag(tag));
 
-      const remove = document.createElement('button'); remove.type = 'button'; remove.textContent = '×';
+      const remove = document.createElement('button'); remove.type = 'button';
+      remove.innerHTML = '<svg viewBox="0 0 24 24" class="icon" aria-hidden="true" focusable="false"><path d="m6 6 12 12M18 6 6 18" /></svg>';
       remove.className = 'delete-action'; remove.setAttribute('aria-label', `Eliminar tag ${tag.name}`);
       remove.addEventListener('click', async () => {
         if (!window.confirm(`¿Eliminar el tag «${tag.name}» de todas las canciones?`)) return;
@@ -43,7 +46,10 @@ class TagManager {
           await this.library.removeNavigation(tag.id, 'tag');
           await this.load();
           await this.library.refreshSongs();
-        } catch (error) { this.library.elements.status.textContent = `No se pudo eliminar el tag: ${error.message}`; }
+        } catch (error) {
+          this.library.elements.status.classList.add('is-error');
+          this.library.elements.status.textContent = `No se pudo eliminar el tag: ${error.message}`;
+        }
       });
       item.append(select, remove);
       this.list.append(item);
