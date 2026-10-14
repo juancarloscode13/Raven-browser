@@ -92,19 +92,14 @@ button { transition: background-color var(--transition-fast), border-color var(-
   color: var(--text);
   text-decoration: none;
 }
-.brand-mark {
-  display: grid;
-  width: 42px;
-  height: 42px;
+.brand-logo {
+  display: block;
+  width: 58px;
+  height: 58px;
   flex: none;
-  place-items: center;
-  border: 1px solid #E3445540;
-  border-radius: 12px;
-  background: linear-gradient(145deg, #A71930, #731528);
-  color: #FFF0F1;
-  box-shadow: var(--shadow-control);
+  object-fit: contain;
+  filter: drop-shadow(0 2px 7px #0006);
 }
-.brand-symbol { width: 25px; height: 25px; stroke-width: 1.5; }
 .brand strong, .brand small { display: block; }
 .brand strong { font-size: .96rem; font-weight: 780; letter-spacing: .16em; }
 .brand small { margin-top: 1px; color: var(--muted); font-size: .72rem; letter-spacing: .02em; }
